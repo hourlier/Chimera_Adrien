@@ -2,7 +2,7 @@
  * \file FindProtonTracks.h
  *
  * \ingroup ChimeraProtonTracks
- * 
+ *
  * \brief Class def header for a class FindProtonTracks
  *
  * @author hourlier
@@ -10,55 +10,38 @@
 
 /** \addtogroup ChimeraProtonTracks
 
-    @{*/
+ @{*/
 
 #ifndef LARLITE_FINDPROTONTRACKS_H
 #define LARLITE_FINDPROTONTRACKS_H
 
 #include "Analysis/ana_base.h"
+#include "TCanvas.h"
+#include "TH1D.h"
+#include "TH2D.h"
+#include "TF1.h"
+#include "TPad.h"
+#include <vector>
 
 namespace larlite {
-  /**
-     \class FindProtonTracks
-     User custom analysis class made by SHELL_USER_NAME
-   */
-  class FindProtonTracks : public ana_base{
-  
-  public:
+    class FindProtonTracks : public ana_base{
 
-    /// Default constructor
-    FindProtonTracks(){ _name="FindProtonTracks"; _fout=0;}
+        public:
 
-    /// Default destructor
-    virtual ~FindProtonTracks(){}
+        FindProtonTracks(){ _name="FindProtonTracks"; _fout=0;}
+        virtual ~FindProtonTracks(){}
+        virtual bool initialize();
+        virtual bool analyze(storage_manager* storage);
+        virtual bool finalize();
 
-    /** IMPLEMENT in FindProtonTracks.cc!
-        Initialization method to be called before the analysis event loop.
-    */ 
-    virtual bool initialize();
+        protected:
 
-    /** IMPLEMENT in FindProtonTracks.cc! 
-        Analyze a data event-by-event  
-    */
-    virtual bool analyze(storage_manager* storage);
-
-    /** IMPLEMENT in FindProtonTracks.cc! 
-        Finalize method to be called after all events processed.
-    */
-    virtual bool finalize();
-
-  protected:
-    
-  };
+        TCanvas *cWireSignal;
+        TH1D    *hWireSignal;
+        TH2D    *hROI[3];
+        std::vector<TCanvas*> canvasContainer;
+        
+    };
 }
 #endif
-
-//**************************************************************************
-// 
-// For Analysis framework documentation, read Manual.pdf here:
-//
-// http://microboone-docdb.fnal.gov:8080/cgi-bin/ShowDocument?docid=3183
-//
-//**************************************************************************
-
-/** @} */ // end of doxygen group 
+/** @} */ // end of doxygen group
