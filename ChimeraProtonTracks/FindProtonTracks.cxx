@@ -22,6 +22,10 @@ namespace larlite {
         cWireSignal->Divide(3,1);
         isProtonTrack = false;
 
+        hROI[0] = new TH2D("hROI_U","hROI_U",10000,0,10000,10000,0,10000);
+        hROI[1] = new TH2D("hROI_V","hROI_V",10000,0,10000,10000,0,10000);
+        hROI[2] = new TH2D("hROI_Y","hROI_Y",10000,0,10000,10000,0,10000);
+
         ReadListFile();
         return true;
     }
@@ -33,7 +37,8 @@ namespace larlite {
         int Run, subrun, evt, trackID, wire_min_U, time_min_U, wire_max_U, time_max_U,  wire_min_V, time_min_V, wire_max_V, time_max_V,  wire_min_Y, time_min_Y, wire_max_Y, time_max_Y;
         double BDTscore;
         bool goOn = true;
-        std::string ligne;
+        std::string line;
+        getline(ListFile,line);
         while(goOn == true){
             ListFile >> Run >> subrun >> evt >> trackID >> wire_min_U >> time_min_U >> wire_max_U >> time_max_U >>  wire_min_V >> time_min_V >> wire_max_V >> time_max_V >> wire_min_Y >> time_min_Y >> wire_max_Y >> time_max_Y >> BDTscore;
             eventInfo.clear();
@@ -65,7 +70,6 @@ namespace larlite {
 
         for(size_t iEvtInfo = 0;iEvtInfo<TrackListInfo.size();iEvtInfo++){
             if(TrackListInfo[iEvtInfo][0] == run && TrackListInfo[iEvtInfo][1] == subrun && TrackListInfo[iEvtInfo][2] == evt){
-                //found the corresponding event in the list
                 TrackIDs.push_back(TrackListInfo[iEvtInfo][3]);
             }
         }
@@ -106,25 +110,15 @@ namespace larlite {
 
         // Step 0: retrieve A
 
-        auto track_v       = storage->get_data<larlite::event_track>("pandoraNu");         // A
-        //auto partid_v      = storage->get_data<larlite::event_partid>("pandoraNuKHitpid"); // C
+        auto track_v       = storage->get_data<larlite::event_track>("pandoraNu"); // A
 
-        std::cout << "New EVT \t" << storage->run_id() << "\t" << storage->subrun_id() << "\t" << storage->event_id() << std::endl;
         if(!FindCorrespondingTrackInList((int)storage->run_id(),(int)storage->subrun_id(),(int)storage->event_id()))return false;
-        else{
-            std::cout << "found track IDs: ";
-            for(size_t iTrack = 0;iTrack < TrackIDs.size();iTrack++){
-                std::cout << TrackIDs[iTrack] << "\t";
-            }
-            std::cout << "from list"<< std::endl;
-        }
+
         if(!track_v){
             std::cout << "\033[93m" << "ERROR" << "\033[00m"
             << " could not locate tracks " << std::endl;
             return false;
         }
-
-        std::cout << "FOUND " << track_v->size() << " tracks in event" << std::endl;
 
         // Step 1: retrieve association info + B
         //         We use a function of storage manager that searches for B based
@@ -167,14 +161,17 @@ namespace larlite {
             }
             if(!isProtonTrack)continue;
 
-            hROI[0] = new TH2D(Form("hROI_%d_%d_%d_%zu_U",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),Form("hROI_%d_%d_%d_%zu_U",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),10000,0,10000,10000,0,10000);
-            hROI[1] = new TH2D(Form("hROI_%d_%d_%d_%zu_V",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),Form("hROI_%d_%d_%d_%zu_V",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),10000,0,10000,10000,0,10000);
-            hROI[2] = new TH2D(Form("hROI_%d_%d_%d_%zu_Y",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),Form("hROI_%d_%d_%d_%zu_Y",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),10000,0,10000,10000,0,10000);
-            
-            std::cout <<"\033[93m" << "Track ID " << one_track.ID() << "\033[00m"
-            << " associated with " << hit_index_v.size()
-            << std::endl;
+            hROI[0]->Reset();hROI[0]->Clear();
+            hROI[1]->Reset();hROI[1]->Clear();
+            hROI[2]->Reset();hROI[2]->Clear();
 
+            hROI[0]->SetNameTitle(Form("hROI_%d_%d_%d_%zu_U",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),
+                                  Form("hROI_%d_%d_%d_%zu_U;wire;time tick",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index));
+            hROI[1]->SetNameTitle(Form("hROI_%d_%d_%d_%zu_V",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),
+                                  Form("hROI_%d_%d_%d_%zu_V;wire;time tick",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index));
+            hROI[2]->SetNameTitle(Form("hROI_%d_%d_%d_%zu_Y",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index),
+                                  Form("hROI_%d_%d_%d_%zu_Y;wire;time tick",storage->run_id(),storage->subrun_id(),storage->event_id(),track_index));
+            
             int hitNum = 0;
             for(auto const& hit_index : hit_index_v) {
                 hROI[(*hit_v)[hit_index].WireID().Plane]->SetBinContent( hROI[(*hit_v)[hit_index].WireID().Plane]->FindBin((*hit_v)[hit_index].WireID().Wire, (*hit_v)[hit_index].PeakTime()), (*hit_v)[hit_index].Integral() );

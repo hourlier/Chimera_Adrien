@@ -40,9 +40,7 @@ namespace larlite {
         protected:
 
         TCanvas *cWireSignal;
-        TH1D    *hWireSignal;
         TH2D    *hROI[3];
-        std::vector<TCanvas*> canvasContainer;
         std::vector< std::vector<int> > TrackListInfo;
         std::vector<int> TrackIDs;
         bool isProtonTrack;
