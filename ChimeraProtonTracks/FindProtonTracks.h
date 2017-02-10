@@ -34,12 +34,18 @@ namespace larlite {
         virtual bool analyze(storage_manager* storage);
         virtual bool finalize();
 
+        bool ReadListFile();
+        bool FindCorrespondingTrackInList(int run, int subrun, int evt);
+
         protected:
 
         TCanvas *cWireSignal;
         TH1D    *hWireSignal;
         TH2D    *hROI[3];
         std::vector<TCanvas*> canvasContainer;
+        std::vector< std::vector<int> > TrackListInfo;
+        std::vector<int> TrackIDs;
+        bool isProtonTrack;
         
     };
 }
