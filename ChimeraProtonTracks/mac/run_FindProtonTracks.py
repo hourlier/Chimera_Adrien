@@ -9,7 +9,8 @@ my_proc = fmwk.ana_processor()
 # set default file if none is specified
 if len(sys.argv) == 1:
     #my_proc.add_input_file("/Users/hourlier/Documents/PostDocMIT/Research/MicroBooNE/DeepLearning/DLwork/DataFiles/larlite_extBNB9131runs_cosmic_trained_only_on_mc_pscore_0.99_1598evts_23aug2016.root")
-    my_proc.add_input_file("/Users/hourlier/Documents/PostDocMIT/Research/MicroBooNE/DeepLearning/DLwork/DataFiles/larlite_pandoraNu_20170210_000045_475610.root")
+    #my_proc.add_input_file("/Users/hourlier/Documents/PostDocMIT/Research/MicroBooNE/DeepLearning/DLwork/DataFiles/larlite_pandoraNu_20170210_000045_475610.root")
+    my_proc.add_input_file("/Users/hourlier/Documents/PostDocMIT/Research/MicroBooNE/DeepLearning/DLwork/DataFiles/larlite_pandoraNu_20170210_000730_864687.root")
 
 # use specified files
 if len(sys.argv) > 1:
