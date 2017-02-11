@@ -21,6 +21,8 @@
 #include "TH2D.h"
 #include "TF1.h"
 #include "TPad.h"
+#include "TTree.h"
+#include "TVector3.h"
 #include <vector>
 
 namespace larlite {
@@ -39,11 +41,23 @@ namespace larlite {
 
         protected:
 
-        TCanvas *cWireSignal;
-        TH2D    *hROI[3];
-        std::vector< std::vector<int> > TrackListInfo;
-        std::vector<int> TrackIDs;
-        bool isProtonTrack;
+        TCanvas                             *cWireSignal;
+        TTree                               *T;
+        TH2D                                *hROI[3];
+        std::vector< std::vector<int> >     TrackListInfo;
+        std::vector<int>                    TrackIDs;
+        bool                                isProtonTrack;
+        double                              Phi;
+        double                              Theta;
+        double                              Length;
+        double                              Run, SubRun, Event, TrackID;
+        size_t                                 Npoints;
+        size_t                              TrackPoint;
+        TVector3                            Vertex;
+        TVector3                            End;
+        TVector3                            TrackPos;
+        TVector3                            TrackDir;
+
         
     };
 }

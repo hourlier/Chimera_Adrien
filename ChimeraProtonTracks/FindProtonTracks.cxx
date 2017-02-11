@@ -26,6 +26,19 @@ namespace larlite {
         hROI[1] = new TH2D("hROI_V","V plane; wire;time tick",10000,0,10000,10000,0,10000);
         hROI[2] = new TH2D("hROI_Y","Y plane; wire;time tick",10000,0,10000,10000,0,10000);
 
+        T = new TTree("T","T");
+        T->Branch("Run",&Run);
+        T->Branch("SubRun",&SubRun);
+        T->Branch("Event",&Event);
+        T->Branch("TrackID",&TrackID);
+        T->Branch("Phi",&Phi);
+        T->Branch("Theta",&Theta);
+        T->Branch("Length",&Length);
+        T->Branch("Npoints","size_t",&Npoints);
+        T->Branch("Vertex","TVector3",&Vertex);
+        T->Branch("End","TVector3",&End);
+
+
         ReadListFile();
         return true;
     }
@@ -134,6 +147,22 @@ namespace larlite {
             hROI[1]->Reset();
             hROI[2]->Reset();
 
+            Phi = one_track.Phi();
+            Theta = one_track.Theta();
+            Length = one_track.Length(0);
+            Run = storage->run_id();
+            SubRun = storage->subrun_id();
+            Event = storage->event_id();
+            TrackID = one_track.ID();
+            Npoints = one_track.NumberTrajectoryPoints();
+            Vertex = one_track.Vertex();
+            End = one_track.End();
+
+            TrackPoint = 1;
+            TrackPos = one_track.LocationAtPoint(TrackPoint);
+            TrackDir = TrackPos - Vertex;
+
+
             int hitNum = 0;
             for(auto const& hit_index : hit_index_v) {
                 hROI[(*hit_v)[hit_index].WireID().Plane]->SetBinContent( hROI[(*hit_v)[hit_index].WireID().Plane]->FindBin((*hit_v)[hit_index].WireID().Wire, (*hit_v)[hit_index].PeakTime()), (*hit_v)[hit_index].Integral() );
@@ -148,7 +177,6 @@ namespace larlite {
             }
 
             for(int iPlane = 0;iPlane < 3;iPlane++){
-                //hROI[iPlane]->RebinY(8);
                 hROI[iPlane]->GetXaxis()->SetRangeUser(WireMin[iPlane]-margin*(WireMax[iPlane]-WireMin[iPlane]),WireMax[iPlane]+margin*(WireMax[iPlane]-WireMin[iPlane]));
                 hROI[iPlane]->GetYaxis()->SetRangeUser(TimeMin[iPlane]-margin*(TimeMax[iPlane]-TimeMin[iPlane]),TimeMax[iPlane]+margin*(TimeMax[iPlane]-TimeMin[iPlane]));
                 cWireSignal->cd(iPlane+1);
@@ -158,6 +186,7 @@ namespace larlite {
             cWireSignal->Modified();
             cWireSignal->Update();
             cWireSignal->SaveAs(Form("plot/Tracks_%06d_%03d_%05d_%02d.png",storage->run_id(),storage->subrun_id(),storage->event_id(),one_track.ID()));
+            T->Fill();
         }
 
         return true;
@@ -168,7 +197,7 @@ namespace larlite {
 ///////////////////////////////////////////////////////
 
     bool FindProtonTracks::finalize() {
-
+        T->Write();
         return true;
     }
     
