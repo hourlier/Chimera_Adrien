@@ -7,13 +7,15 @@ my_proc = fmwk.ana_processor()
 
 # Set input root file
 # set default file if none is specified
-if len(sys.argv) == 1:
-    #my_proc.add_input_file("/Users/hourlier/Documents/PostDocMIT/Research/MicroBooNE/DeepLearning/DLwork/DataFiles/larlite_extBNB9131runs_cosmic_trained_only_on_mc_pscore_0.99_1598evts_23aug2016.root")
-    #my_proc.add_input_file("/Users/hourlier/Documents/PostDocMIT/Research/MicroBooNE/DeepLearning/DLwork/DataFiles/larlite_pandoraNu_20170210_000045_475610.root")
-    my_proc.add_input_file("/Users/hourlier/Documents/PostDocMIT/Research/MicroBooNE/DeepLearning/DLwork/DataFiles/larlite_pandoraNu_20170210_000730_864687.root")
+if len(sys.argv) <= 2:
+    my_proc.add_input_file("/Users/hourlier/Documents/PostDocMIT/Research/MicroBooNE/DeepLearning/DLwork/DataFiles/larlite_pandoraNu_20170211_205524_331124.root")
+
+Nevt = -1
+if len(sys.argv) == 2:
+    Nevt = int(sys.argv[1]);
 
 # use specified files
-if len(sys.argv) > 1:
+if len(sys.argv) > 2:
     for x in xrange(len(sys.argv)-1):
         my_proc.add_input_file(sys.argv[x+1])
 
@@ -32,8 +34,12 @@ print
 print  "Finished configuring ana_processor. Start event loop!"
 print
 
+
 # Let's run it.
-my_proc.run(0,100);
+if Nevt <= -1 :
+    my_proc.run(0);
+if Nevt > 0 :
+    my_proc.run(0,Nevt);
 
 # done!
 print
