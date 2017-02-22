@@ -209,13 +209,6 @@ namespace larlite {
                 hitNum[iPlane]++;
             }
 
-            FindExtremePoints();
-
-            for(int iPlane=0;iPlane<3;iPlane++){
-                XtremPoints[iPlane][0]->SetPoint(0,XtremLoc[iPlane][0][0],XtremLoc[iPlane][0][1]);
-                XtremPoints[iPlane][1]->SetPoint(0,XtremLoc[iPlane][1][0],XtremLoc[iPlane][1][1]);
-            }
-
             int NgausHit[3]  = {0,0,0};
             for(size_t iGausHit = 0; iGausHit<gaushit_v->size(); iGausHit++){
                 int iPlane = gaushit_v->at(iGausHit).WireID().Plane;
@@ -231,6 +224,25 @@ namespace larlite {
             for(int iPlane = 0;iPlane < 3;iPlane++){
                 if(NgausHit[iPlane]-hitNum[iPlane] > 15 || (NgausHit[0]-hitNum[0])+(NgausHit[1]-hitNum[1])+(NgausHit[2]-hitNum[2]) > 20){
                     isOtherTrack = true;
+                }
+            }
+
+            if(isOtherTrack)return true;
+
+            double dmax[3] = {0,0,0};
+            double dLoc[3] = {0,0,0};
+            for(auto const& iHit_index : hit_index_v) {
+                int iPlane = (*hit_v)[iHit_index].WireID().Plane;
+                for(auto const& jHit_index : hit_index_v) {
+                    int jPlane = (*hit_v)[jHit_index].WireID().Plane;
+                    if(jPlane!= iPlane) continue;
+                    if(iHit_index <= jHit_index)continue;
+                    dLoc[iPlane] = sqrt( pow((*hit_v)[iHit_index].WireID().Wire-(*hit_v)[jHit_index].WireID().Wire,2)+pow((double)((*hit_v)[iHit_index].PeakTime())-(double)((*hit_v)[jHit_index].PeakTime()),2) );
+                    if(dmax[iPlane]<=dLoc[iPlane]){
+                        dmax[iPlane] = dLoc[iPlane];
+                        XtremPoints[iPlane][0]->SetPoint(0,(*hit_v)[iHit_index].WireID().Wire,(double)((*hit_v)[iHit_index].PeakTime()));
+                        XtremPoints[iPlane][1]->SetPoint(0,(*hit_v)[jHit_index].WireID().Wire,(double)((*hit_v)[jHit_index].PeakTime()));
+                    }
                 }
             }
 
@@ -258,42 +270,6 @@ namespace larlite {
         return true;
     }
 
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-
-    void FindProtonTracks::FindExtremePoints(){
-        for(int iPlane = 0;iPlane <3;iPlane++){
-            iXtrem = 0;
-            jXtrem = 0;
-            FindExtremePointsOneView(iPlane);
-            XtremLoc[iPlane][0][0] = TrackHitCoordinates[iPlane][iXtrem][0];
-            XtremLoc[iPlane][0][1] = TrackHitCoordinates[iPlane][iXtrem][1];
-            XtremLoc[iPlane][1][0] = TrackHitCoordinates[iPlane][jXtrem][0];
-            XtremLoc[iPlane][1][1] = TrackHitCoordinates[iPlane][jXtrem][1];
-        }
-    }
-
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////
-
-    void FindProtonTracks::FindExtremePointsOneView(int iPlane){
-        double dMax = 0;
-        double dLoc;
-        if(TrackHitCoordinates[iPlane].size() == 0)return;
-        for(size_t iHit = 0;iHit < TrackHitCoordinates[iPlane].size()-1;iHit++){
-            for(size_t jHit = iHit+1;jHit<TrackHitCoordinates[iPlane].size();jHit++){
-                dLoc = sqrt( pow(TrackHitCoordinates[iPlane][jHit][0]-TrackHitCoordinates[iPlane][iHit][0],2)   // wires
-                            +pow(TrackHitCoordinates[iPlane][jHit][0]-TrackHitCoordinates[iPlane][iHit][0],2)); // time tick
-                if(dLoc > dMax){
-                    dMax = dLoc;
-                    iXtrem = iHit;
-                    jXtrem = jHit;
-                }
-            }
-        }
-    }
 
 ///////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////

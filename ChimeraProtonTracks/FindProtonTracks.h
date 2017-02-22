@@ -42,8 +42,6 @@ namespace larlite {
 
         bool ReadListFile();
         bool FindCorrespondingTrackInList(int run, int subrun, int evt);
-        void FindExtremePoints();
-        void FindExtremePointsOneView(int iPlane);
 
         protected:
 
