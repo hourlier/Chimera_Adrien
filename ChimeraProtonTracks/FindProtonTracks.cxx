@@ -231,6 +231,8 @@ namespace larlite {
 
             double dmax[3] = {0,0,0};
             double dLoc[3] = {0,0,0};
+            int iHit_indexMax[3] = {0,0,0};
+            int jHit_indexMax[3] = {0,0,0};
             for(auto const& iHit_index : hit_index_v) {
                 int iPlane = (*hit_v)[iHit_index].WireID().Plane;
                 for(auto const& jHit_index : hit_index_v) {
@@ -242,32 +244,58 @@ namespace larlite {
                         dmax[iPlane] = dLoc[iPlane];
                         XtremPoints[iPlane][0]->SetPoint(0,(*hit_v)[iHit_index].WireID().Wire,(double)((*hit_v)[iHit_index].PeakTime()));
                         XtremPoints[iPlane][1]->SetPoint(0,(*hit_v)[jHit_index].WireID().Wire,(double)((*hit_v)[jHit_index].PeakTime()));
+                        iHit_indexMax[iPlane] = iHit_index;
+                        jHit_indexMax[iPlane] = jHit_index;
                     }
                 }
             }
 
-            for(int iPlane = 0;iPlane < 3;iPlane++){
-
-                cWireSignal->cd(iPlane+1);
-                if(isOtherTrack){gGausHits[iPlane]->SetMarkerColor(2);}
-                if(gTrackHits[iPlane]->GetN() == 0 && gGausHits[iPlane]->GetN() == 0){gGausHits[iPlane]->SetPoint(0,1,1); gTrackHits[iPlane]->SetPoint(0,1,1);/*XtremPoints[iPlane][0]->SetPoint(0,1,1);XtremPoints[iPlane][1]->SetPoint(0,1,1);*/}
-
-                gGausHits[iPlane]->Draw("AP");
-                gTrackHits[iPlane]->Draw("same LP");
-
-                XtremPoints[iPlane][0]->Draw("P same");
-                XtremPoints[iPlane][1]->Draw("P same");
-
-
+            //try and figure out the end/begining of track
+            double dEdx[3][2] = {{0,0},{0,0},{0,0}};
+            for(auto const& hit_index : hit_index_v) {
+                int iPlane = (*hit_v)[hit_index].WireID().Plane;
+                if(std::abs((double)hit_index-(double)iHit_indexMax[iPlane]) < 0.2*hitNum[iPlane]){dEdx[iPlane][0]+=(*hit_v)[hit_index].SummedADC();}
+                if(std::abs((double)hit_index-(double)jHit_indexMax[iPlane]) < 0.2*hitNum[iPlane]){dEdx[iPlane][1]+=(*hit_v)[hit_index].SummedADC();}
+            }
+            for(int iPlane = 0;iPlane<3;iPlane++){
+                if(dEdx[iPlane][0] > dEdx[iPlane][1]){// then iHit_indexMax is associated to the end of the track
+                    XtremPoints[iPlane][0]->SetMarkerColor(2);
+                    XtremPoints[iPlane][1]->SetMarkerColor(8);
+                }
+                else{
+                    XtremPoints[iPlane][0]->SetMarkerColor(8);
+                    XtremPoints[iPlane][1]->SetMarkerColor(2);
+                }
             }
 
-            cWireSignal->Modified();
-            cWireSignal->Update();
-            cWireSignal->SaveAs(Form("plot/Tracks_%05d_%03d_%05d_%02d.pdf",storage->run_id(),storage->subrun_id(),storage->event_id(),one_track.ID()));
+            DrawTrack();
             T->Fill();
         }
 
         return true;
+    }
+
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+///////////////////////////////////////////////////////
+
+    void FindProtonTracks::DrawTrack(){
+        for(int iPlane = 0;iPlane < 3;iPlane++){
+
+            cWireSignal->cd(iPlane+1);
+            if(isOtherTrack){gGausHits[iPlane]->SetMarkerColor(2);}
+            if(gTrackHits[iPlane]->GetN() == 0 && gGausHits[iPlane]->GetN() == 0){gGausHits[iPlane]->SetPoint(0,1,1); gTrackHits[iPlane]->SetPoint(0,1,1);/*XtremPoints[iPlane][0]->SetPoint(0,1,1);XtremPoints[iPlane][1]->SetPoint(0,1,1);*/}
+
+            gGausHits[iPlane]->Draw("AP");
+            gTrackHits[iPlane]->Draw("same LP");
+
+            XtremPoints[iPlane][0]->Draw("P same");
+            XtremPoints[iPlane][1]->Draw("P same");
+        }
+
+        cWireSignal->Modified();
+        cWireSignal->Update();
+        cWireSignal->SaveAs(Form("plot/Tracks_%05d_%03d_%05d_%02d.pdf",(int)Run,(int)SubRun,(int)Event,(int)TrackID));
     }
 
 
