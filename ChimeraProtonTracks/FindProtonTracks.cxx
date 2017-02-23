@@ -251,22 +251,35 @@ namespace larlite {
             }
 
             //try and figure out the end/begining of track
-            double dEdx[3][2] = {{0,0},{0,0},{0,0}};
-            for(auto const& hit_index : hit_index_v) {
-                int iPlane = (*hit_v)[hit_index].WireID().Plane;
-                if(std::abs((double)hit_index-(double)iHit_indexMax[iPlane]) < 0.2*hitNum[iPlane]){dEdx[iPlane][0]+=(*hit_v)[hit_index].SummedADC();}
-                if(std::abs((double)hit_index-(double)jHit_indexMax[iPlane]) < 0.2*hitNum[iPlane]){dEdx[iPlane][1]+=(*hit_v)[hit_index].SummedADC();}
-            }
-            for(int iPlane = 0;iPlane<3;iPlane++){
-                if(dEdx[iPlane][0] > dEdx[iPlane][1]){// then iHit_indexMax is associated to the end of the track
-                    XtremPoints[iPlane][0]->SetMarkerColor(2);
-                    XtremPoints[iPlane][1]->SetMarkerColor(8);
+            if(Vertex.X() > End.X()){
+                //std::cout << Run << "\t" << SubRun << "\t" << Event << "\t" << TrackID << "\t vertex on top" << std::endl;
+                for(int iPlane = 0;iPlane < 3;iPlane++){
+                    if((double)((*hit_v)[iHit_indexMax[iPlane]].PeakTime()) > (double)((*hit_v)[jHit_indexMax[iPlane]].PeakTime())){//then iHit_indexMax is associated with the vertex
+                        XtremPoints[iPlane][0]->SetMarkerColor(8);
+                        XtremPoints[iPlane][1]->SetMarkerColor(2);
+                    }
+                    else{
+                        XtremPoints[iPlane][0]->SetMarkerColor(2);
+                        XtremPoints[iPlane][1]->SetMarkerColor(8);
+                    }
                 }
-                else{
-                    XtremPoints[iPlane][0]->SetMarkerColor(8);
-                    XtremPoints[iPlane][1]->SetMarkerColor(2);
+
+            }
+            else {
+                //std::cout << Run << "\t" << SubRun << "\t" << Event << "\t" << TrackID << "\t vertex on bottom" << std::endl;
+                for(int iPlane = 0;iPlane < 3;iPlane++){
+                    if((double)((*hit_v)[iHit_indexMax[iPlane]].PeakTime()) > (double)((*hit_v)[jHit_indexMax[iPlane]].PeakTime())){//then jHit_indexMax is associated with the vertex
+                        XtremPoints[iPlane][0]->SetMarkerColor(2);
+                        XtremPoints[iPlane][1]->SetMarkerColor(8);
+                    }
+                    else{
+                        XtremPoints[iPlane][0]->SetMarkerColor(8);
+                        XtremPoints[iPlane][1]->SetMarkerColor(2);
+                    }
                 }
             }
+            // note: could still be the unlikely event where hte vertex and track end happen at the same X (track exactly in the axis of the detector, or bent just the right way) in which cas I would need to apply this reasonning to the wire
+            // added to the to do list
 
             DrawTrack();
             T->Fill();
