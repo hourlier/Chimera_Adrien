@@ -51,6 +51,7 @@ namespace larlite {
         TGraph                              *XtremPoints[3][2];
         TGraph                              *gGausHits[3];
         TGraph                              *gTrackHits[3];
+        //TH2D                                *hROI[3];
         std::vector< std::vector<float> >   TrackHitCoordinates[3];
         std::vector< std::vector<int> >     TrackListInfo;
         std::vector<int>                    TrackIDs;

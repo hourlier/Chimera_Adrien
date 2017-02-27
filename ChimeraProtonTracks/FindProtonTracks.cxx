@@ -41,6 +41,10 @@ namespace larlite {
             XtremPoints[iPlane][1]->SetMarkerSize(2);
         }
 
+        //hROI[0] = new TH2D("hROI_U","U plane; wire;time tick",10000,0,10000,10000,0,10000);
+        //hROI[1] = new TH2D("hROI_V","V plane; wire;time tick",10000,0,10000,10000,0,10000);
+        //hROI[2] = new TH2D("hROI_Y","Y plane; wire;time tick",10000,0,10000,10000,0,10000);
+
         T = new TTree("T","T");
         T->Branch("Run",&Run);
         T->Branch("SubRun",&SubRun);
@@ -118,7 +122,7 @@ namespace larlite {
 
     bool FindProtonTracks::analyze(storage_manager* storage) {
         gStyle->SetOptStat(0);
-        double margin = 0.25;
+        double margin = 0.125;
         auto track_v   = storage->get_data<larlite::event_track>("pandoraNu"); // A
         auto gaushit_v = storage->get_data<larlite::event_hit>("gaushit");
 
@@ -169,6 +173,7 @@ namespace larlite {
                 gGausHits[iPlane]->SetMarkerColor(3);
                 while(gGausHits[ iPlane]->GetN()>0){gGausHits[ iPlane]->RemovePoint(0);}
                 while(gTrackHits[iPlane]->GetN()>0){gTrackHits[iPlane]->RemovePoint(0);}
+                //hROI[iPlane]->Reset();
             }
 
             Phi = one_track.Phi();
@@ -206,16 +211,30 @@ namespace larlite {
                 TimeMax[iPlane] = std::max( (double)(TimeMax[iPlane]),  (double)((*hit_v)[hit_index].PeakTime()));
 
                 gTrackHits[iPlane]->SetPoint(hitNum[iPlane],(*hit_v)[hit_index].WireID().Wire,(*hit_v)[hit_index].PeakTime());
+                //hROI[iPlane]->SetBinContent( hROI[iPlane]->FindBin((*hit_v)[hit_index].WireID().Wire, (*hit_v)[hit_index].PeakTime()), (*hit_v)[hit_index].Integral() );
                 hitNum[iPlane]++;
             }
+
+            /*for(int iPlane = 0;iPlane<3;iPlane++){
+                hROI[iPlane]->GetXaxis()->SetRangeUser(WireMin[iPlane]-margin*(WireMax[iPlane]-WireMin[iPlane]),WireMax[iPlane]+margin*(WireMax[iPlane]-WireMin[iPlane]));
+                hROI[iPlane]->GetYaxis()->SetRangeUser(TimeMin[iPlane]-margin*(TimeMax[iPlane]-TimeMin[iPlane]),TimeMax[iPlane]+margin*(TimeMax[iPlane]-TimeMin[iPlane]));
+                for(int i = 0;i<hROI[iPlane]->GetNbinsX();i++){
+                    if(i < WireMin[iPlane]-margin*(WireMax[iPlane]-WireMin[iPlane])-1 || i > WireMax[iPlane]+margin*(WireMax[iPlane]-WireMin[iPlane])+1) continue;
+                    for(int j = 0;j<hROI[iPlane]->GetNbinsY();j++){
+                        if(j < TimeMin[iPlane]-margin*(TimeMax[iPlane]-TimeMin[iPlane])-1 || j > TimeMax[iPlane]+margin*(TimeMax[iPlane]-TimeMin[iPlane])+1) continue;
+                        if(hROI[iPlane]->GetBinContent(i,j) > 0) continue;
+                        hROI[iPlane]->SetBinContent(i,j,0.01);
+                    }
+                }
+            }*/
 
             int NgausHit[3]  = {0,0,0};
             for(size_t iGausHit = 0; iGausHit<gaushit_v->size(); iGausHit++){
                 int iPlane = gaushit_v->at(iGausHit).WireID().Plane;
-                if(   gaushit_v->at(iGausHit).PeakTime()    > TimeMin[iPlane]-0.5*margin*(TimeMax[iPlane]-TimeMin[iPlane])
-                   && gaushit_v->at(iGausHit).PeakTime()    < TimeMax[iPlane]+0.5*margin*(TimeMax[iPlane]-TimeMin[iPlane])
-                   && gaushit_v->at(iGausHit).WireID().Wire > WireMin[iPlane]-0.5*margin*(WireMax[iPlane]-WireMin[iPlane])
-                   && gaushit_v->at(iGausHit).WireID().Wire < WireMax[iPlane]+0.5*margin*(WireMax[iPlane]-WireMin[iPlane])){
+                if(   gaushit_v->at(iGausHit).PeakTime()    > TimeMin[iPlane]-margin*(TimeMax[iPlane]-TimeMin[iPlane])
+                   && gaushit_v->at(iGausHit).PeakTime()    < TimeMax[iPlane]+margin*(TimeMax[iPlane]-TimeMin[iPlane])
+                   && gaushit_v->at(iGausHit).WireID().Wire > WireMin[iPlane]-margin*(WireMax[iPlane]-WireMin[iPlane])
+                   && gaushit_v->at(iGausHit).WireID().Wire < WireMax[iPlane]+margin*(WireMax[iPlane]-WireMin[iPlane])){
                     gGausHits[iPlane]->SetPoint(NgausHit[iPlane],gaushit_v->at(iGausHit).WireID().Wire,gaushit_v->at(iGausHit).PeakTime());
                     NgausHit[iPlane]++;
                 }
@@ -252,7 +271,6 @@ namespace larlite {
 
             //try and figure out the end/begining of track
             if(Vertex.X() > End.X()){
-                //std::cout << Run << "\t" << SubRun << "\t" << Event << "\t" << TrackID << "\t vertex on top" << std::endl;
                 for(int iPlane = 0;iPlane < 3;iPlane++){
                     if((double)((*hit_v)[iHit_indexMax[iPlane]].PeakTime()) > (double)((*hit_v)[jHit_indexMax[iPlane]].PeakTime())){//then iHit_indexMax is associated with the vertex
                         XtremPoints[iPlane][0]->SetMarkerColor(8);
@@ -265,8 +283,7 @@ namespace larlite {
                 }
 
             }
-            else {
-                //std::cout << Run << "\t" << SubRun << "\t" << Event << "\t" << TrackID << "\t vertex on bottom" << std::endl;
+            else if(Vertex.X() < End.X()) {
                 for(int iPlane = 0;iPlane < 3;iPlane++){
                     if((double)((*hit_v)[iHit_indexMax[iPlane]].PeakTime()) > (double)((*hit_v)[jHit_indexMax[iPlane]].PeakTime())){//then jHit_indexMax is associated with the vertex
                         XtremPoints[iPlane][0]->SetMarkerColor(2);
@@ -278,8 +295,8 @@ namespace larlite {
                     }
                 }
             }
-            // note: could still be the unlikely event where hte vertex and track end happen at the same X (track exactly in the axis of the detector, or bent just the right way) in which cas I would need to apply this reasonning to the wire
-            // added to the to do list
+
+            else{std::cout << "WOW! exact same time! what are the odds?" << std::endl;}
 
             DrawTrack();
             T->Fill();
@@ -293,11 +310,26 @@ namespace larlite {
 ///////////////////////////////////////////////////////
 
     void FindProtonTracks::DrawTrack(){
+
+        gGausHits[0]->SetTitle(Form("%05d_%03d_%05d_%02d_U",(int)Run,(int)SubRun,(int)Event,(int)TrackID));
+        gGausHits[1]->SetTitle(Form("%05d_%03d_%05d_%02d_V",(int)Run,(int)SubRun,(int)Event,(int)TrackID));
+        gGausHits[2]->SetTitle(Form("%05d_%03d_%05d_%02d_Y",(int)Run,(int)SubRun,(int)Event,(int)TrackID));
+
+        double Tmin = 1e9;
+        double Tmax = 0;
+        for(int iPlane = 0;iPlane < 3;iPlane++){
+            if( gGausHits[iPlane]->GetYaxis()->GetXmin() < Tmin ){Tmin = gGausHits[iPlane]->GetYaxis()->GetXmin();}
+            if( gGausHits[iPlane]->GetYaxis()->GetXmax() > Tmax ){Tmax = gGausHits[iPlane]->GetYaxis()->GetXmax();}
+        }
+
         for(int iPlane = 0;iPlane < 3;iPlane++){
 
             cWireSignal->cd(iPlane+1);
             if(isOtherTrack){gGausHits[iPlane]->SetMarkerColor(2);}
-            if(gTrackHits[iPlane]->GetN() == 0 && gGausHits[iPlane]->GetN() == 0){gGausHits[iPlane]->SetPoint(0,1,1); gTrackHits[iPlane]->SetPoint(0,1,1);/*XtremPoints[iPlane][0]->SetPoint(0,1,1);XtremPoints[iPlane][1]->SetPoint(0,1,1);*/}
+            if(gTrackHits[iPlane]->GetN() == 0 && gGausHits[iPlane]->GetN() == 0){gGausHits[iPlane]->SetPoint(0,1,1); gTrackHits[iPlane]->SetPoint(0,1,1);}
+            gGausHits[iPlane]->GetYaxis()->SetRangeUser(Tmin-0.1*(Tmax-Tmin),Tmax+0.1*(Tmax-Tmin));
+
+            //hROI[iPlane]->Draw("colz");
 
             gGausHits[iPlane]->Draw("AP");
             gTrackHits[iPlane]->Draw("same LP");
