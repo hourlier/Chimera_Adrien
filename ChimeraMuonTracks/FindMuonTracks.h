@@ -39,10 +39,28 @@ namespace larlite {
         virtual bool analyze(storage_manager* storage);
         virtual bool finalize();
         void ReadCSVFile();
+        void DrawTrack();
 
         protected:
 
-        double Run;
+        int _Run, _SubRun, _Event;
+        std::vector< std::vector<int> > TrackListInfo;
+        TCanvas                             *cWireSignal;
+        TTree                               *T;
+        TGraph                         *XtremPoints[3][2];
+        TGraph                         *gGausHits[3];
+        TGraph                         *gTrackHits[3];
+        //TH2D                           *hROI[3];
+
+        double                              Phi;
+        double                              Theta;
+        double                              Length;
+        double                              TrackID;
+        size_t                              Npoints;
+        size_t                              TrackPoint;
+        TVector3                            Vertex;
+        TVector3                            End;
+        bool                                isOtherTrack;
 
     };
 }
