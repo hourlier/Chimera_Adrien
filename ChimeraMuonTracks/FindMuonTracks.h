@@ -43,7 +43,7 @@ namespace larlite {
 
         protected:
 
-        int _Run, _SubRun, _Event;
+        int _Run, _SubRun, _Event, _decayIndex;
         std::vector< std::vector<int> > TrackListInfo;
         TCanvas                             *cWireSignal;
         TTree                               *T;
