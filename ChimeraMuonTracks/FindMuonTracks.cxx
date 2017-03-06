@@ -52,13 +52,12 @@ namespace larlite {
         T->Branch("Run",&_Run);
         T->Branch("SubRun",&_SubRun);
         T->Branch("Event",&_Event);
-        T->Branch("TrackID",&TrackID);
-        T->Branch("Phi",&Phi);
-        T->Branch("Theta",&Theta);
-        T->Branch("Length",&Length);
-        //T->Branch("Npoints","size_t",&Npoints);
         T->Branch("Vertex","TVector3",&Vertex);
         T->Branch("End","TVector3",&End);
+        T->Branch("selectedTracks","std::vector<int>",&selectedTracks);
+        T->Branch("PhiTracks","std::vector<double>",&PhiTracks);
+        T->Branch("ThetaTracks","std::vector<double>",&ThetaTracks);
+        T->Branch("LengthTracks","std::vector<double>",&LengthTracks);
 
         ReadCSVFile();
         return true;
@@ -121,6 +120,9 @@ namespace larlite {
                 while(gTrackHits[iPlane]->GetN()>0){gTrackHits[iPlane]->RemovePoint(0);}
                 //hROI[iPlane]->Reset();
             }
+            selectedTracks.clear();
+            PhiTracks.clear();
+            LengthTracks.clear();
 
             int hitNum[3] = {0,0,0};
             unsigned int WireMin[3] = {100000,100000,100000};
@@ -140,6 +142,7 @@ namespace larlite {
                 bool foundCorrespondingTrack = false;
                 //std::cout << "\t track# " << one_track.ID();
 
+                // check current track corresponds to one in the file
                 for(size_t itrack = 0;itrack<TrackListInfo.size();itrack++){
                     if(_Run == TrackListInfo[itrack][0] && _SubRun == TrackListInfo[itrack][1] && _Event == TrackListInfo[itrack][2] && _decayIndex == TrackListInfo[itrack][3] && (int)one_track.ID() == (int)TrackListInfo[itrack][5]){
                         //std::cout << "\t OK" << std::endl;
@@ -164,6 +167,11 @@ namespace larlite {
                 Npoints = one_track.NumberTrajectoryPoints();
                 Vertex = one_track.Vertex();
                 End = one_track.End();
+
+                selectedTracks.push_back(one_track.ID());
+                PhiTracks.push_back(Phi);
+                ThetaTracks.push_back(Theta);
+                LengthTracks.push_back(Length);
 
 
                 /*int hitNum[3] = {0,0,0};
@@ -270,6 +278,7 @@ namespace larlite {
             //if(isOtherTrack)return true;
 
             DrawTrack();
+            T->Fill();
         }
 
 
