@@ -151,7 +151,7 @@ namespace larlite {
                     else{continue;}
                 }
 
-                if(!foundCorrespondingTrack){/*std::cout << "\t -- " << std::endl;*/ continue;}
+                if(!foundCorrespondingTrack){continue;}
 
                 /*for(int iPlane = 0;iPlane<3;iPlane++){
                     gGausHits[iPlane]->SetMarkerColor(3);
